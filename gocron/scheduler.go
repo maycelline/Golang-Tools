@@ -8,7 +8,7 @@ import (
 	"github.com/jasonlvhit/gocron"
 )
 
-func Scheduler(user model.User) {
+func Schedule(user model.User) {
 	scheduler := gocron.NewScheduler()
 
 	counter := 0

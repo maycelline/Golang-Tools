@@ -2,7 +2,9 @@ package main
 
 import (
 	scheduler "GoTools/gocron"
-	// mail "GoTools/gomail"
+	mail "GoTools/gomail"
+	cache "GoTools/goredis"
+	asynchronous "GoTools/goroutine"
 	model "GoTools/model"
 )
 
@@ -11,10 +13,16 @@ func main() {
 	user.FullName = "Maycelline Selvyanti"
 	user.Email = "maycelinesudarsono@gmail.com"
 
-	//Call Gomail
-	// mail.SendEmail(user)
+	// GoMail
+	mail.SendEmail(user)
 
-	//Call GoCron
-	scheduler.Scheduler(user)
+	// GoRoutine
+	asynchronous.DoAsynchronousTask()
+
+	// GoCron
+	scheduler.Schedule(user)
+
+	// GoRedis
+	cache.GetUser(user)
 
 }
