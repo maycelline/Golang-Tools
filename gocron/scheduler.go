@@ -19,3 +19,7 @@ func Schedule(user model.User) {
 	})
 	<-scheduler.Start()
 }
+
+func StopSchedule() {
+	//belum diisi, bingung
+}
