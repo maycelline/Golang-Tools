@@ -8,7 +8,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/jasonlvhit/gocron"
 )
+
+var Schedule = gocron.NewScheduler()
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	var users []model.User
@@ -114,7 +118,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go scheduler.Schedule(user)
+	go scheduler.Schedule(user, Schedule)
 	generateToken(w, user)
 
 	var response model.UserResponse
@@ -127,7 +131,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	// go scheduler.StopSchedule()
+	go scheduler.StopSchedule(Schedule)
 	resetUserToken(w)
 	responseMessage(w, 200, "Success")
 }

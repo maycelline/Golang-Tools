@@ -9,9 +9,7 @@ import (
 	"github.com/jasonlvhit/gocron"
 )
 
-func Schedule(user model.User) {
-	scheduler := gocron.NewScheduler()
-
+func Schedule(user model.User, scheduler *gocron.Scheduler) {
 	counter := 0
 	scheduler.Every(10).Second().Do(func() {
 		counter++
@@ -21,11 +19,12 @@ func Schedule(user model.User) {
 	<-scheduler.Start()
 }
 
-func StopSchedule(s *gocron.Scheduler, sc chan bool) {
+func StopSchedule(s *gocron.Scheduler) {
 	//belum diisi, bingung
 	time.Sleep(8 * time.Second)
 	s.Clear()
 	fmt.Println("All task removed")
-	close(sc)
+	close(s.Start())
+	//belum gua coba jalan atau nggak wkwk
 	//link https://stackoverflow.com/questions/34453894/cron-job-in-golang
 }
