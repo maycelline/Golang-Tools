@@ -38,6 +38,7 @@ func main() {
 
 	router.HandleFunc("/users/login", controller.LoginUser).Methods("POST")
 	router.HandleFunc("/users/logout", controller.LogoutUser).Methods("POST")
+	//nanti yang logout cek posisi nya aja eh lagi login ato ga biar ga sembarangan gitu :")
 
 	http.Handle("/", router)
 	fmt.Println("Connected to port 8080")
