@@ -8,17 +8,16 @@ import (
 	"github.com/jasonlvhit/gocron"
 )
 
-func Schedule(user model.User, scheduler *gocron.Scheduler) {
-	counter := 0
+var scheduler = gocron.NewScheduler()
+
+func Schedule(user model.User) {
 	scheduler.Every(10).Second().Do(func() {
-		counter++
-		fmt.Print("Testing ke ", counter, ": ")
 		gomail.SendEmail(user)
 	})
-	<-scheduler.Start()
+	scheduler.Start()
 }
 
-func StopSchedule(s *gocron.Scheduler) {
-	s.Clear()
+func StopSchedule() {
+	scheduler.Clear()
 	fmt.Println("All task removed")
 }

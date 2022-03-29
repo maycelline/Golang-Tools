@@ -8,11 +8,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
-	"github.com/jasonlvhit/gocron"
 )
-
-var Schedule = gocron.NewScheduler()
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	var users []model.User
@@ -27,7 +23,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(query)
 		if err != nil {
 			log.Println(err)
-			responseMessage(w, 150, "Query error")
+			showMessage(w, 400, "Query Error")
 			return
 		}
 
@@ -35,7 +31,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			if err := rows.Scan(&user.Id, &user.FullName, &user.Email, &user.Password); err != nil {
 				log.Println(err.Error())
-				responseMessage(w, 170, "Data error")
+				showMessage(w, 400, "Get Failed")
 				return
 			} else {
 				users = append(users, user)
@@ -44,13 +40,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		go cache.SetUsers(users)
 	}
 
-	var response model.UsersResponse
-	response.Status = 200
-	response.Message = "Succes"
-	response.Data = users
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	showUsersSuccessMessage(w, 200, "Get Success", users)
 }
 
 func InsertNewUser(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +50,7 @@ func InsertNewUser(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		log.Println(err)
-		responseMessage(w, 100, "Parse error")
+		showMessage(w, 400, "Parse Error")
 		return
 	}
 
@@ -76,24 +66,17 @@ func InsertNewUser(w http.ResponseWriter, r *http.Request) {
 
 	if errQuery != nil {
 		log.Println(errQuery)
-		responseMessage(w, 400, "Query error, Insert failed")
+		showMessage(w, 400, "Query Error")
 		return
 	}
 
 	id, _ := resultQuery.LastInsertId()
 	var user model.User = model.User{Id: int(id), FullName: fullname, Email: email, Password: password}
 
-	//asynchronous
 	go cache.SetUsers(nil)
 	go mail.SendEmail(user)
 
-	var response model.UserResponse
-	response.Status = 200
-	response.Message = "Succes"
-	response.Data = user
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	showUserSuccessMessage(w, 200, "Insert Success", user)
 }
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +86,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		log.Println(err)
-		responseMessage(w, 100, "Parse error")
+		showMessage(w, 400, "Parse Error")
 		return
 	}
 
@@ -114,29 +97,41 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	if err := db.QueryRow("SELECT id, fullname, email, password from users where email = ? AND password = ?",
 		email, password).Scan(&user.Id, &user.FullName, &user.Email, &user.Password); err != nil {
 		log.Println(err.Error())
-		responseMessage(w, 170, "Login gagal")
+		showMessage(w, 400, "Login Failed")
 		return
 	}
 
-	go scheduler.Schedule(user, Schedule)
+	go scheduler.Schedule(user)
 	generateToken(w, user)
 
-	var response model.UserResponse
-	response.Status = 200
-	response.Message = "Login Success"
-	response.Data = user
+	showUserSuccessMessage(w, 200, "Login Success", user)
+}
 
+func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	go scheduler.StopSchedule()
+	resetUserToken(w)
+	showMessage(w, 200, "Success")
+}
+
+func showUserSuccessMessage(w http.ResponseWriter, status int, message string, data model.User) {
+	var response model.UserResponse
+	response.Status = status
+	response.Message = message
+	response.Data = data
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	go scheduler.StopSchedule(Schedule)
-	resetUserToken(w)
-	responseMessage(w, 200, "Success")
+func showUsersSuccessMessage(w http.ResponseWriter, status int, message string, data []model.User) {
+	var response model.UsersResponse
+	response.Status = status
+	response.Message = message
+	response.Data = data
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
-func responseMessage(w http.ResponseWriter, status int, message string) {
+func showMessage(w http.ResponseWriter, status int, message string) {
 	var response model.Response
 	response.Status = status
 	response.Message = message

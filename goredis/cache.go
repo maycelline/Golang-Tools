@@ -50,8 +50,4 @@ func SetUsers(users []model.User) {
 		log.Println(err)
 		return
 	}
-
-	if users == nil {
-		log.Println("set nil success")
-	}
 }

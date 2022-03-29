@@ -7,16 +7,16 @@ type User struct {
 	Password string `json:"password"`
 }
 
-type UsersResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-	Data    []User `json:"users"`
-}
-
 type UserResponse struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Data    User   `json:"user"`
+}
+
+type UsersResponse struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Data    []User `json:"users"`
 }
 
 type Response struct {
