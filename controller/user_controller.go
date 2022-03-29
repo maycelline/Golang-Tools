@@ -3,6 +3,7 @@ package controller
 import (
 	scheduler "GoTools/gocron"
 	mail "GoTools/gomail"
+	cache "GoTools/goredis"
 	model "GoTools/model"
 	"encoding/json"
 	"log"
@@ -10,28 +11,33 @@ import (
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	db := connect()
-	defer db.Close()
-
-	query := "SELECT id, fullname, email, password from users"
-
-	rows, err := db.Query(query)
-	if err != nil {
-		log.Println(err)
-		responseMessage(w, 150, "Query error")
-		return
-	}
-
-	var user model.User
 	var users []model.User
-	for rows.Next() {
-		if err := rows.Scan(&user.Id, &user.FullName, &user.Email, &user.Password); err != nil {
-			log.Println(err.Error())
-			responseMessage(w, 170, "Data error")
+	users = cache.GetUsers()
+
+	if users == nil {
+		db := connect()
+		defer db.Close()
+
+		query := "SELECT id, fullname, email, password from users"
+
+		rows, err := db.Query(query)
+		if err != nil {
+			log.Println(err)
+			responseMessage(w, 150, "Query error")
 			return
-		} else {
-			users = append(users, user)
 		}
+
+		var user model.User
+		for rows.Next() {
+			if err := rows.Scan(&user.Id, &user.FullName, &user.Email, &user.Password); err != nil {
+				log.Println(err.Error())
+				responseMessage(w, 170, "Data error")
+				return
+			} else {
+				users = append(users, user)
+			}
+		}
+		go cache.SetUsers(users)
 	}
 
 	var response model.UsersResponse
@@ -74,6 +80,7 @@ func InsertNewUser(w http.ResponseWriter, r *http.Request) {
 	var user model.User = model.User{Id: int(id), FullName: fullname, Email: email, Password: password}
 
 	//asynchronous
+	go cache.SetUsers(nil)
 	go mail.SendEmail(user)
 
 	var response model.UserResponse
@@ -120,7 +127,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	go scheduler.StopSchedule()
+	// go scheduler.StopSchedule()
 	resetUserToken(w)
 	responseMessage(w, 200, "Success")
 }
