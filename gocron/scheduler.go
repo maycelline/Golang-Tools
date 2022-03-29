@@ -4,6 +4,7 @@ import (
 	"GoTools/gomail"
 	"GoTools/model"
 	"fmt"
+	"time"
 
 	"github.com/jasonlvhit/gocron"
 )
@@ -20,6 +21,11 @@ func Schedule(user model.User) {
 	<-scheduler.Start()
 }
 
-func StopSchedule() {
+func StopSchedule(s *gocron.Scheduler, sc chan bool) {
 	//belum diisi, bingung
+	time.Sleep(8 * time.Second)
+	s.Clear()
+	fmt.Println("All task removed")
+	close(sc)
+	//link https://stackoverflow.com/questions/34453894/cron-job-in-golang
 }
