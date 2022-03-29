@@ -20,6 +20,7 @@ func GetUsers() []model.User {
 
 	value, err := client.Get(ctx, "users").Result()
 	if err != nil {
+		log.Println("Get Error")
 		log.Println(err)
 		return nil
 	}
@@ -47,7 +48,10 @@ func SetUsers(users []model.User) {
 
 	err = client.Set(ctx, "users", converted, 0).Err()
 	if err != nil {
+		log.Println("Set Error")
 		log.Println(err)
 		return
+	} else {
+		log.Println("Cache set")
 	}
 }
