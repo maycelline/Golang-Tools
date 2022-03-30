@@ -37,7 +37,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 				users = append(users, user)
 			}
 		}
-		go cache.SetUsers(users)
+		cache.SetUsers(users)
 	}
 
 	showUsersSuccessMessage(w, 200, "Get Success", users)
@@ -73,7 +73,7 @@ func InsertNewUser(w http.ResponseWriter, r *http.Request) {
 	id, _ := resultQuery.LastInsertId()
 	var user model.User = model.User{Id: int(id), FullName: fullname, Email: email, Password: password}
 
-	go cache.SetUsers(nil)
+	cache.SetUsers(nil)
 	go mail.SendEmail(user)
 
 	showUserSuccessMessage(w, 200, "Insert Success", user)
@@ -101,14 +101,14 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go scheduler.Schedule(user)
+	scheduler.Schedule(user)
 	generateToken(w, user)
 
 	showUserSuccessMessage(w, 200, "Login Success", user)
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	go scheduler.StopSchedule()
+	scheduler.StopSchedule()
 	resetUserToken(w)
 	showMessage(w, 200, "Success")
 }
